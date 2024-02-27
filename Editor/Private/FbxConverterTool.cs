@@ -6,36 +6,30 @@ using UnityEngine;
 
 public static class FbxConverterTool
 {
-    //将Fbx内的动画文件分离出来
     public static void SpliteFbxMotion2Anim(string fbxPath)
     {
-        Object[] objects = AssetDatabase.LoadAllAssetsAtPath(fbxPath);        //加载FBX里所有物体
+        Object[] objects = AssetDatabase.LoadAllAssetsAtPath(fbxPath);
         if (objects != null && objects.Length > 0)
         {
-            string targetPath = Application.dataPath + "/AnimationClip";          //目录AnimationClip
+            string targetPath = Application.dataPath + "/AnimationClip";
             if (!Directory.Exists(targetPath))
             {
-                Directory.CreateDirectory(targetPath);     //如果目录不存在就创建一个
+                Directory.CreateDirectory(targetPath);
             }
-
-            foreach (Object obj in objects)     //遍历选择的物体
+            foreach (Object obj in objects)
             {
                 AnimationClip fbxClip = obj as AnimationClip;
                 if (fbxClip != null)
                 {
-                    AnimationClip clip = new AnimationClip();      //new一个AnimationClip存放生成的AnimationClip
-                    EditorUtility.CopySerialized(fbxClip, clip);    //复制
-                    AssetDatabase.CreateAsset(clip, "Assets/AnimationClip/" + fbxClip.name + ".anim");    //生成文件
+                    AnimationClip clip = new AnimationClip();
+                    EditorUtility.CopySerialized(fbxClip, clip);
+                    AssetDatabase.CreateAsset(clip, "Assets/AnimationClip/" + fbxClip.name + ".anim");
                 }
                 else
                 {
                     Debug.Log("当前选择的文件不是带有AnimationClip的FBX文件");
                 }
             }
-
         }
-
-        
     }
-
 }

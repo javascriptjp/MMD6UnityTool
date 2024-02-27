@@ -120,11 +120,12 @@ namespace MMDExtensions.Tools
                     XRotation = reader.ReadSingle(),
                     YRotation = reader.ReadSingle(),
                     ZRotation = reader.ReadSingle(),
-                    Curve = new VMDCurve() { 
-                        AX=reader.ReadByte(),
-                        AY=reader.ReadByte(),
-                        BX=reader.ReadByte(),
-                        BY=getCameraByte()
+                    Curve = new VMDCurve()
+                    {
+                        AX = reader.ReadByte(),
+                        AY = reader.ReadByte(),
+                        BX = reader.ReadByte(),
+                        BY = getCameraByte()
                     },
                     FOV = reader.ReadUInt32(),
                     Orthographic = reader.ReadBoolean()

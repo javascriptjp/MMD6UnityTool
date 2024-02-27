@@ -6,17 +6,16 @@ using UnityEngine;
 
 public class CameraVmdAgent
 {
-    string _vmdFile;
-    MMD.VMD.VMDFormat format_;
+	string _vmdFile;
+	MMD.VMD.VMDFormat format_;
 
 	public CameraVmdAgent(string filePath)
-    {
-        _vmdFile = filePath;
+	{
+		_vmdFile = filePath;
+	}
 
-    }
-
-    public void CreateAnimationClip()
-    {
+	public void CreateAnimationClip()
+	{
 		if (null == format_)
 		{
 			format_ = VMDLoaderScript.Import(_vmdFile);
@@ -35,7 +34,7 @@ public class CameraVmdAgent
 			AssetDatabase.DeleteAsset(anima_file);
 
 		AssetDatabase.CreateAsset(animation_clip, anima_file);
-		
+
 		AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(animation_clip));
 
 		//AssetDatabase.Refresh();
