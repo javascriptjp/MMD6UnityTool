@@ -9,48 +9,45 @@ namespace MMD6UnityTool
 {
     internal class AnimationHelpers
     {
+        [MenuItem("MMD6UnityTool/(beta) use 60fps")]
+        private static void Change60fpsState()
+        {
+            string menuPath = "MMD6UnityTool/(beta) use 60fps";
+            bool isChecked = Menu.GetChecked("MMD6UnityTool/(beta) use 60fps");
+            Menu.SetChecked(menuPath, !isChecked);
+        }
+
         [MenuItem("Assets/VMD Morph To Anim", priority = 50051)]
         internal static void CreateMorphAnimation()
         {
             string path = AssetDatabase.GetAssetPath(Selection.GetFiltered<DefaultAsset>(SelectionMode.Assets).FirstOrDefault());
-            var stream = File.Open(path, FileMode.Open);
-            var vmd = VMDParser.ParseVMD(stream);
-            var animationClip = new AnimationClip() { frameRate = 30 };
-            var delta = 1 / animationClip.frameRate;
-            var keyframes = from keys in vmd.Morphs.ToLookup(k => k.MorphName, v => new Keyframe(v.FrameIndex * delta, v.Weight * 100)) select keys;
-            foreach (var package in keyframes)
+            using (var stream = File.Open(path, FileMode.Open))
             {
-                var name = package.Key;
-                var curve = new AnimationCurve(package.ToArray());
-                try
+                var vmd = VMDParser.ParseVMD(stream);
+                var animationClip = new AnimationClip() { frameRate = Menu.GetChecked("MMD6UnityTool/(beta) use 60fps") ? 60 : 30 };
+                var keyframes = vmd.Morphs.GroupBy(k => k.MorphName).Select(g => new
                 {
-                    if (name == MorphAnimationNames.Blink || name == MorphAnimationNames.Smile)
-                    {
-                        AddCurveToAnimationClip(animationClip, name, curve);
-                        AddCurveToAnimationClip(animationClip, name, curve);
-                    }
-                    else if (name == MorphAnimationNames.Wink2 || name == MorphAnimationNames.Wink2Right || name == MorphAnimationNames.Wink || name == MorphAnimationNames.WinkRight)
+                    Name = g.Key,
+                    Keyframes = g.Select(v => new Keyframe(v.FrameIndex * (1 / animationClip.frameRate), v.Weight * 100))
+                });
+                foreach (var package in keyframes)
+                {
+                    var name = package.Name;
+                    var curve = new AnimationCurve(package.Keyframes.ToArray());
+                    if (name == MorphAnimationNames.Blink || name == MorphAnimationNames.Smile) AddCurveToAnimationClip(animationClip, name, curve);
+                    if (name == MorphAnimationNames.Wink2 || name == MorphAnimationNames.Wink2Right || name == MorphAnimationNames.Wink || name == MorphAnimationNames.WinkRight)
                     {
                         var existingCurve = AnimationUtility.GetEditorCurve(animationClip, EditorCurveBinding.FloatCurve("Body", typeof(SkinnedMeshRenderer), $"blendShape.{name}"));
                         if (existingCurve != null) curve = MergeAnimationCurves(existingCurve, curve);
-                        AddCurveToAnimationClip(animationClip, name, curve);
                     }
-                    else
-                    {
-                        AddCurveToAnimationClip(animationClip, name, curve);
-                    }
+                    AddCurveToAnimationClip(animationClip, name, curve);
                 }
-                catch (Exception e)
-                {
-                    Debug.LogError($"エラーが発生しました: {e.Message}");
-                }
+                string filepath = path.Replace(".vmd", "_morph.anim");
+                AssetDatabase.CreateAsset(animationClip, $"{filepath}");
+                AssetDatabase.Refresh();
+                Debug.LogFormat("[{0}]:変換処理が正常に実行されました。", DateTime.Now);
+                GC.Collect();
             }
-
-            stream.Close();
-            string oldpath = path.Replace(".vmd", "");
-            AssetDatabase.CreateAsset(animationClip, $"{oldpath}_morph.anim");
-            Debug.LogFormat("[{0}]:変換処理が正常に実行されました。", System.DateTime.Now);
-            System.GC.Collect();
         }
 
         [MenuItem("Assets/VMD Camera To Anim", priority = 50050)]
@@ -62,7 +59,7 @@ namespace MMD6UnityTool
             {
                 CameraVmdAgent camera_agent = new CameraVmdAgent(selectPath);
                 camera_agent.CreateAnimationClip();
-                Debug.LogFormat("[{0}]:カメラアニメーションの作成に成功しました。", System.DateTime.Now);
+                Debug.LogFormat("[{0}]:カメラアニメーションの作成に成功しました。", DateTime.Now);
             }
             else Debug.LogError("ファイルまたはフォルダを選択してください");
         }
@@ -93,7 +90,8 @@ namespace MMD6UnityTool
 
         #region Utils
 
-        private static bool isExtension(string path, string extension) {
+        private static bool isExtension(string path, string extension)
+        {
             return Path.GetExtension(path).ToUpper().Contains(extension.ToUpper());
         }
 
@@ -102,7 +100,6 @@ namespace MMD6UnityTool
             if (MorphAnimations.Contains(registerName))
                 animationClip.SetCurve("Body", typeof(SkinnedMeshRenderer), $"blendShape.{registerName}", curve);
         }
-
         private static AnimationCurve MergeAnimationCurves(AnimationCurve existingCurve, AnimationCurve newCurve)
         {
             var existingKeyframes = existingCurve.keys.ToList();

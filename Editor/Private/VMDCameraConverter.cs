@@ -16,10 +16,7 @@ public class VMDCameraConverter
 	private AnimationClip CreateAnimationClip_(VMDFormat format)
 	{
 
-		AnimationClip clip = new AnimationClip()
-		{
-			frameRate = 30,
-		};
+		AnimationClip clip = new AnimationClip() { frameRate = Menu.GetChecked("MMD6UnityTool/(beta) use 60fps") ? 60 : 30 };
 		clip.name = format.name;
 
 		CreateKeysForCamera(format, clip);
